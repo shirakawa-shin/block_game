@@ -59,7 +59,7 @@
 <body>
     <div class="game-container">
         <h1>ブロック崩しゲーム</h1>
-        <div class="score">スコア: <span id="score">0</span></div>
+        <div class="score">スコア: <span id="score">0</span> ／ ステージ: <span id="level">1</span> / <span id="maxLevel">3</span></div>
         <canvas id="gameCanvas" width="800" height="600"></canvas>
         <div class="controls">
             矢印キーまたはマウスでパドルを移動<br>
@@ -73,6 +73,7 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const levelElement = document.getElementById('level');
         const messageElement = document.getElementById('gameMessage');
 
         // ゲーム状態
@@ -80,13 +81,16 @@
         let score = 0;
         let gameWon = false;
         let gameLost = false;
+        let level = 1;
+        const maxLevel = 3;
+        const baseSpeed = 5;
 
         // ボール
         const ball = {
             x: canvas.width / 2,
             y: canvas.height - 50,
-            dx: 5,
-            dy: -5,
+            dx: baseSpeed,
+            dy: -baseSpeed,
             radius: 10,
             color: '#ff6b6b'
         };
@@ -208,12 +212,34 @@
                 }
             });
 
-            // 勝利判定
+            // ステージクリア判定
             if (blocks.every(block => block.destroyed)) {
-                gameWon = true;
-                gameRunning = false;
-                messageElement.innerHTML = '<div class="game-clear">ゲームクリア！</div>';
+                if (level < maxLevel) {
+                    nextStage();
+                } else {
+                    gameWon = true;
+                    gameRunning = false;
+                    messageElement.innerHTML = '<div class="game-clear">全ステージクリア！おめでとう！</div>';
+                }
             }
+        }
+
+        // 次のステージへ進む
+        function nextStage() {
+            level++;
+            levelElement.textContent = level;
+            gameRunning = false;
+
+            // ボールとパドルを初期位置に戻し、速度を上げる
+            const speed = baseSpeed + (level - 1) * 1.5;
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height - 50;
+            ball.dx = speed;
+            ball.dy = -speed;
+            paddle.x = canvas.width / 2 - 75;
+
+            initBlocks();
+            messageElement.innerHTML = `<div class="game-clear">ステージ${level - 1}クリア！ SPACEキーでステージ${level}開始</div>`;
         }
 
         // ゲームループ
@@ -237,11 +263,13 @@
         function resetGame() {
             ball.x = canvas.width / 2;
             ball.y = canvas.height - 50;
-            ball.dx = 5;
-            ball.dy = -5;
+            ball.dx = baseSpeed;
+            ball.dy = -baseSpeed;
             paddle.x = canvas.width / 2 - 75;
             score = 0;
+            level = 1;
             scoreElement.textContent = score;
+            levelElement.textContent = level;
             gameRunning = false;
             gameWon = false;
             gameLost = false;
